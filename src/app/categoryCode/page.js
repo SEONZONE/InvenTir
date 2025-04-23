@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import changeTypeName from "@/lib/helpers"
 import SelectDropdown from "@/src/component/ui/SelectDropDown";
+import { CommonInput } from "@/src/component/ui/InputComponents";
 
 
 export default function categoryCode() {
@@ -229,12 +230,12 @@ export default function categoryCode() {
                 placeholder="선택"
             />
           )}
-          <input
+          <CommonInput
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             className="py-2 px-4 font-medium text-sm border-2 border-blue-500 rounded-lg"
-            placeholder={`${activeTab} 이름 입력`}
+            placeholder={`${activeTab} 이름`}
           />
           <button
             className="btn-add"

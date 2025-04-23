@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import SelectDropdown from '@/src/component/ui/SelectDropDown';
+import { CommonInput } from '@/src/component/ui/InputComponents';
 
 export default function MaterialTable() {
   const [selectCategory, setSelectCategory] = useState("");
@@ -187,16 +188,16 @@ export default function MaterialTable() {
                 />
               </td>
               <td className="border-base w-20">
-                <input
+                <CommonInput
                   type="number"
                   className="td-base"
-                  min="0"
                   value={quantity || ""}
+                  placeholder="수량"
                   onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
                 />
               </td>
               <td className="border-base w-32">
-                <input
+                <CommonInput
                   type="number"
                   className="td-base"
                   placeholder="재료비"
@@ -205,7 +206,7 @@ export default function MaterialTable() {
                 />
               </td>
               <td className="border-base w-32">
-                <input
+                <CommonInput
                   type="number"
                   className="td-base"
                   placeholder="노무비"
@@ -214,7 +215,7 @@ export default function MaterialTable() {
                 />
               </td>
               <td className="border-base w-32">
-                <input
+                <CommonInput
                   type="number"
                   className="td-base"
                   placeholder="경비"
