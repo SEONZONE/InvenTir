@@ -10,7 +10,7 @@ export async function GET(request) {
     const status = searchParams.get('status')
     const name = searchParams.get('name')
     
-    let query = 'SELECT * FROM CATEGORY_CODE WHERE type = ?';
+    let query = 'SELECT  * FROM CATEGORY_CODE WHERE type = ?';
     let values = [type];
 
     if (status) {
@@ -39,14 +39,15 @@ export async function GET(request) {
 // 분류 코드 추가
 export async function POST(request){
   try{
-    const query = 'INSERT INTO CATEGORY_CODE (type, step1, step2, name, regi_name, date_added, status) VALUES (?, ?, ?, ?, ?, CURDATE(), ?)';
+    const query = 'INSERT INTO CATEGORY_CODE (type, step1, step2, name, regi_name, date_added, status,unit) VALUES (?, ?, ?, ?, ?, CURDATE(), ?,?)';
     let values = [];
     
     const body = await request.json();
-    const { type, name, step1, step2, regi_name ,status} = body;
+    const { type, name, step1, step2, regi_name ,status, unit} = body;
     
     // 타입 별 validation 추가 
-    if(!(type && (type === 'process' || type === 'product' || type === 'unit' || type === 'scale'))){
+    // if(!(type && (type === 'process' || type === 'product' || type === 'unit' || type === 'scale'))){
+    if(!(type && (type === 'process' || type === 'product'))){
       return NextResponse.json({ error: "type 인자가 존재하지 않거나 process, product, unit 중 일치하지 않습니다.."}, { status: 400 });  
     }
     
@@ -55,15 +56,10 @@ export async function POST(request){
       return NextResponse.json({ error: "name 인자가 존재하지 않습니다.."}, { status: 400 });  
     }
     
-    //TODO  관리자 하드코딩 로그인 기능 구현 이후 추가.
     if(type === 'process'){
-      values = [type,name,'#',name,'관리자','Y'];
+      values = [type,name,'#',name,'관리자','Y',unit];
     }else if(type === 'product'){
-      values = [type,step1,name,name,'관리자','Y'];
-    }else if(type === 'unit'){
-      values = [type,null,null,name,'관리자','Y'];
-    }else if(type === 'scale'){
-      values = [type,null,null,name,'관리자','Y'];
+      values = [type,step1,name,name,'관리자','Y',unit];
     }
 
     const results = await executeQuery({

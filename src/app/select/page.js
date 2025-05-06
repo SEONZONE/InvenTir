@@ -12,39 +12,25 @@ export default function MaterialTable() {
   const [unitPrice3, setUnitPrice3] = useState(0);
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
-  const [selectedScale, setSelectedScale] = useState("");
   const [items, setItems] = useState([]);
   const [categoryProcess, setCategoryProcess] = useState([]);
   const [categoryProduct, setCategoryProduct] = useState([]);
-  const [categoryUnit, setCategoryUnit] = useState([]);
-  const [categoryScale, setCategoryScale] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-
-  const subCategories = {
-    돌: ["화강석", "대리석", "현무암", "사암"],
-    나무: ["소나무", "참나무", "벚나무", "단풍나무"],
-    장비: ["굴착기", "크레인", "콘크리트믹서", "지게차"],
-  };
 
   const handlerCategoryChange = (e) => {
     const selectedProcess = e.target.value;
     setSelectCategory(selectedProcess);
     setSelectedSubCategory("");
 
-    const filtered = categoryProduct.filter(item => item.step1 === selectedProcess);
+    let filtered = categoryProduct.filter(item => item.step1 === selectedProcess);
     setFilteredProducts(filtered);
+    filtered = null;
   };
 
   const handleSubCategoryChange = (e) => {
-    setSelectedSubCategory(e.target.value);
-  };
-
-  const handleUnitChange = (e) => {
-    setSelectedUnit(e.target.value);
-  };
-
-  const handleScaleChange = (e) => {
-    setSelectedScale(e.target.value);
+    let filtered = categoryProduct.filter(item => item.id === parseInt(e.target.value));
+    setSelectedSubCategory(filtered[0].unit);
+    setSelectedUnit(filtered[0].unit);
   };
 
   const handleUnitPriceChange1 = (e) => {
@@ -75,7 +61,6 @@ export default function MaterialTable() {
       id: Date.now(),
       category: selectCategory,
       subCategory: selectedSubCategory,
-      scale: selectedScale,
       unit: selectedUnit,
       quantity: quantity,
       unitPrice1: unitPrice1,
@@ -89,7 +74,6 @@ export default function MaterialTable() {
     // 초기화
     setSelectCategory("");
     setSelectedSubCategory("");
-    setSelectedScale("");
     setSelectedUnit("");
     setQuantity(0);
     setUnitPrice1(0);
@@ -111,13 +95,7 @@ export default function MaterialTable() {
       const productJson = await product.json();
       setCategoryProduct(productJson);
 
-      const unit = await fetch("/api/categoryCode?type=unit");
-      const unitJson = await unit.json();
-      setCategoryUnit(unitJson);
 
-      const scale = await fetch("/api/categoryCode?type=scale");
-      const scaleJson = await scale.json();
-      setCategoryScale(scaleJson);
     } catch (err) {
       console.log("err: " + err);
     }
@@ -138,7 +116,6 @@ export default function MaterialTable() {
             <tr className="bg-gray-100">
               <th className="th-base">공정</th>
               <th className="th-base">품명</th>
-              <th className="th-base">규격</th>
               <th className="th-base">단위</th>
               <th className="th-base">수량</th>
               <th className="th-base">재료비</th>
@@ -167,24 +144,16 @@ export default function MaterialTable() {
                   items={filteredProducts}
                   placeholder="선택"
                   disabled={!selectCategory}
+                  valueField="id"
+                  labelField="name"
                 />
               </td>
-              <td className="border-base">
-                <SelectDropdown
+              <td className="border-base w-20">
+                <CommonInput
+                  type="text"
                   className="td-base"
-                  onChange={handleScaleChange}
-                  value={selectedScale}
-                  items={categoryScale}
-                  placeholder="선택"
-                />
-              </td>
-              <td className="border-base">
-                <SelectDropdown
-                  className="td-base"
-                  onChange={handleUnitChange}
                   value={selectedUnit}
-                  items={categoryUnit}
-                  placeholder="선택"
+                  readOnly={true}
                 />
               </td>
               <td className="border-base w-20">

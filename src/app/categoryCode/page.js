@@ -9,14 +9,14 @@ import { CommonInput } from "@/src/component/ui/InputComponents";
 
 export default function categoryCode() {
   const [activeTab, setActiveTab] = useState("공정");
-  const tabs = ["공정", "품명","규격", "단위"];
+  const tabs = ["공정", "품명"];
   const [currentData, setCurrentData] = useState([]);
   const [processData, setProcessData] = useState([]);
   const [productData, setProductData] = useState([]);
-  const [unitData, setUnitData] = useState([]);
-  const [inputValue, setInputValue] = useState("");
+  const [inputNameValue, setInputNameValue] = useState("");
+  const [inputUnitValue, setInputUnitValue] = useState("");
   const [selectProcess, setSelectProcess] = useState("");
-  const [scaleData, setScaleData] = useState([]);
+
 
   const loadData = async () => {
     try {
@@ -28,13 +28,6 @@ export default function categoryCode() {
       const productRsltJson = await productRslt.json();
       setProductData(productRsltJson);
 
-      const unit = await fetch("/api/categoryCode?type=unit");
-      const unitJson = await unit.json();
-      setUnitData(unitJson);
-
-      const scale = await fetch("/api/categoryCode?type=scale");
-      const scaleJson = await scale.json();
-      setScaleData(scaleJson);
     } catch (err) {
       console.log("err: " + err);
     }
@@ -49,22 +42,24 @@ export default function categoryCode() {
       setCurrentData(processData);
     } else if (activeTab === "품명") {
       setCurrentData(productData);
-    } else if (activeTab === "단위") {
-      setCurrentData(unitData);
-    } else if (activeTab === "규격") {
-      setCurrentData(scaleData);
-    }
-  }, [activeTab, processData, productData, unitData,scaleData]);
+    } 
+  }, [activeTab, processData, productData]);
 
   //항목 추가.
   const addItem = async (tab) => {
-    if (!inputValue) {
-      console.log("입력값이 존재하지 않음.");
+    
+    
+    let type = changeTypeName(tab);
+    
+    if (!inputNameValue) {
+      alert("이름 입력값이 존재하지 않음.");
       return false;
     }
 
-    
-    let type = changeTypeName(tab);
+    if(type === "product" && !inputUnitValue){
+      alert("단위 입력값이 존재하지 않음.");
+      return false;
+    }
 
     // 품명일 경우 공정 선택 유무 확인
     if(type === "product"){
@@ -82,9 +77,10 @@ export default function categoryCode() {
         },
         body: JSON.stringify({
           type: type,
-          name: inputValue,
-          step1: tab === "품명" ? selectProcess : null,
-          step2: tab === "공정" ? "#" : tab === "품명" ? inputValue : null,
+          name: inputNameValue,
+          step1: type === "product" ? selectProcess : null,
+          step2: type === "process" ? "#" : type === "product" ? inputNameValue : null,
+          unit: type === "product" ? inputUnitValue : null,
           regi_name: "관리자",
         }),
       });
@@ -94,7 +90,7 @@ export default function categoryCode() {
       }
 
       loadData();
-      setInputValue("");
+      setInputNameValue("");
       setSelectProcess("");
     } catch (err) {
       console.error("항목 추가 오류: ", err);
@@ -102,8 +98,12 @@ export default function categoryCode() {
     }
   };
 
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
+  const handleInputNameChange = (e) => {
+    setInputNameValue(e.target.value);
+  };
+
+  const handleInputUnitChange = (e) => {
+    setInputUnitValue(e.target.value);
   };
 
   const toggleStatus = async (itemId, tab) => {
@@ -129,28 +129,7 @@ export default function categoryCode() {
           return item;
         })
       );
-    } else if (tab === "단위") {
-      setUnitData(
-        unitData.map((item) => {
-          if (item.id === itemId) {
-            newStatus = item.status === "Y" ? "N" : "Y";
-            return { ...item, status: newStatus };
-          }
-          return item;
-        })
-      );
-    }else if (tab === "규격") {
-      setScaleData(
-        scaleData.map((item) => {
-          if (item.id === itemId) {
-            newStatus = item.status === "Y" ? "N" : "Y";
-            return { ...item, status: newStatus };
-          }
-          return item;
-        })
-      );
-    }
-
+    } 
 
     try{
       let type = changeTypeName(tab);
@@ -229,18 +208,28 @@ export default function categoryCode() {
                 items={processData}
                 placeholder="선택"
             />
+            
           )}
           <CommonInput
             type="text"
-            value={inputValue}
-            onChange={handleInputChange}
+            value={inputNameValue}
+            onChange={handleInputNameChange}
             className="py-2 px-4 font-medium text-sm border-2 border-blue-500 rounded-lg"
             placeholder={`${activeTab} 이름`}
-          />
+            />
+          {activeTab === "품명" && (
+            <CommonInput
+              type="text"
+              value={inputUnitValue}
+              onChange={handleInputUnitChange}
+              className="py-2 px-4 font-medium text-sm border-2 border-blue-500 rounded-lg"
+              placeholder={"단위"}
+            />
+          )}
           <button
-            className="btn-add"
+            className="btn-add"d
             onClick={() => addItem(activeTab)}
-            disabled={!inputValue.trim()} // 입력값이 없으면 버튼 비활성화
+            disabled={!inputNameValue.trim()} // 입력값이 없으면 버튼 비활성화
           >
             {activeTab} 추가
           </button>
@@ -253,6 +242,7 @@ export default function categoryCode() {
             <tr className="bg-gray-100">
               {activeTab === "품명" && <th className="th-base">공정</th>}
               <th className="th-base">이름</th>
+              {activeTab === "품명" && <th className="th-base">단위</th>}
               <th className="th-base">등록자</th>
               <th className="th-base">추가날짜</th>
               <th className="th-base">사용여부</th>
@@ -266,6 +256,9 @@ export default function categoryCode() {
                   <td className="border-base">{item.step1}</td>
                 )}
                 <td className="border-base">{item.name}</td>
+                {activeTab === "품명" && (
+                  <td className="border-base">{item.unit}</td>
+                )}
                 <td className="border-base">{item.regi_name}</td>
                 <td className="border-base">
                   {format(item.date_added, "yyyy년 MM월 dd일")}

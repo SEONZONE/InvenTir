@@ -7,15 +7,17 @@ export function CommonInput({
     value,
     onChange,
     className,
-    placeholder
+    placeholder,
+    readOnly=false,
   }) {
     return (
     <input
+        readOnly={readOnly}
         type={type}
         value={value}
         onChange={onChange}
         className={className}
-        placeholder={`${placeholder} 입력`}
+        placeholder={`${placeholder ? placeholder : ""} 입력`}
     />
     );
   }
