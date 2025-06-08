@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SelectDropdown from '@/src/component/ui/SelectDropDown';
-import { CommonInput } from '@/src/component/ui/InputComponents';
+import SelectDropdown from "@/src/component/ui/SelectDropDown";
+import { CommonInput } from "@/src/component/ui/InputComponents";
 
 export default function MaterialTable() {
   const [selectCategory, setSelectCategory] = useState("");
@@ -22,13 +22,17 @@ export default function MaterialTable() {
     setSelectCategory(selectedProcess);
     setSelectedSubCategory("");
 
-    let filtered = categoryProduct.filter(item => item.step1 === selectedProcess);
+    let filtered = categoryProduct.filter(
+      (item) => item.step1 === selectedProcess
+    );
     setFilteredProducts(filtered);
     filtered = null;
   };
 
   const handleSubCategoryChange = (e) => {
-    let filtered = categoryProduct.filter(item => item.id === parseInt(e.target.value));
+    let filtered = categoryProduct.filter(
+      (item) => item.id === parseInt(e.target.value)
+    );
     setSelectedSubCategory(filtered[0].unit);
     setSelectedUnit(filtered[0].unit);
   };
@@ -94,8 +98,6 @@ export default function MaterialTable() {
       const product = await fetch("/api/categoryCode?type=product");
       const productJson = await product.json();
       setCategoryProduct(productJson);
-
-
     } catch (err) {
       console.log("err: " + err);
     }
@@ -201,57 +203,7 @@ export default function MaterialTable() {
                 </button>
               </td>
             </tr>
-
-            {/* 추가된 항목들 */}
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td className="border-base">{item.category}</td>
-                <td className="border-base">{item.subCategory}</td>
-                <td className="border-base">{item.scale}</td>
-                <td className="border-base">{item.unit}</td>
-                <td className="border-base">{item.quantity}</td>
-                <td className="border-base">
-                  {item.unitPrice1.toLocaleString("ko-KR")}
-                </td>
-                <td className="border-base">
-                  {item.unitPrice2.toLocaleString("ko-KR")}
-                </td>
-                <td className="border-base">
-                  {item.unitPrice3.toLocaleString("ko-KR")}
-                </td>
-                <td className="border-base text-right font-medium">
-                  {item.totalPrice.toLocaleString("ko-KR")} 원
-                </td>
-                <td className="border-base">
-                  <button
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-2 rounded-lg"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    삭제
-                  </button>
-                </td>
-              </tr>
-            ))}
           </tbody>
-          {items.length > 0 && (
-            <tfoot>
-              <tr className="bg-gray-100">
-                <td
-                  colSpan="8"
-                  className="border-300 px-4 py-2 text-right font-bold"
-                >
-                  총액
-                </td>
-                <td className="border-300 px-4 py-2 text-right font-bold">
-                  {items
-                    .reduce((sum, item) => sum + item.totalPrice, 0)
-                    .toLocaleString("ko-KR")}{" "}
-                  원
-                </td>
-                <td className="border-300 px-4 py-2"></td>
-              </tr>
-            </tfoot>
-          )}
         </table>
       </div>
     </div>
