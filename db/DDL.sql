@@ -1,9 +1,9 @@
 
 -- 데이터베이스 생성
-CREATE DATABASE inventory_management;
+-- CREATE DATABASE inventory_management;
 
 -- 생성한 데이터베이스 사용
-USE inventory_management;
+-- USE inventory_management;
 
 -- 분류 코드 관리 생성
 
@@ -62,6 +62,7 @@ CREATE TABLE PROJECT_MATERIALS (
     FOREIGN KEY (material_id) REFERENCES materials(material_id) ON DELETE RESTRICT
 );
 
+ALTER TABLE CATEGORY_CODE ADD COLUMN UNIT VARCHAR(50);
 
 ALTER TABLE MATERIALS AUTO_INCREMENT = 100;
 

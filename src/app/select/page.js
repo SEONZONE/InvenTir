@@ -115,20 +115,35 @@ export default function MaterialTable() {
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="w-full border-collapse">
           <thead>
+            {/* 첫 번째 행 - 대분류 */}
+            <tr className="bg-gray-200">
+              <th className="th-base" rowSpan={3}>공정</th>
+              <th className="th-base" rowSpan={3}>품명</th>
+              <th className="th-base" rowSpan={3}>단위</th>
+              <th className="th-base" rowSpan={3}>수량</th>
+              <th className="th-base" colSpan={3}>재료비</th>
+              <th className="th-base" colSpan={3}>노무비</th>
+              <th className="th-base" colSpan={3}>경비</th>
+              <th className="th-base" rowSpan={3}>총합산</th>
+              <th className="th-base" rowSpan={3}>추가</th>
+            </tr>
+
+            {/* 두 번째 행 - 세부 항목 */}
             <tr className="bg-gray-100">
-              <th className="th-base">공정</th>
-              <th className="th-base">품명</th>
-              <th className="th-base">단위</th>
+              <th className="th-base">금액</th>
               <th className="th-base">수량</th>
-              <th className="th-base">재료비</th>
-              <th className="th-base">노무비</th>
-              <th className="th-base">경비</th>
-              <th className="th-base">합산</th>
-              <th className="th-base">추가</th>
+              <th className="th-base">재료비 합산</th>
+              <th className="th-base">금액</th>
+              <th className="th-base">수량</th>
+              <th className="th-base">노무비 합산</th>
+              <th className="th-base">금액</th>
+              <th className="th-base">수량</th>
+              <th className="th-base">경비 합산</th>
             </tr>
           </thead>
           <tbody>
             <tr>
+              {/* 공정 */}
               <td className="border-base">
                 <SelectDropdown
                   className="td-base"
@@ -138,6 +153,7 @@ export default function MaterialTable() {
                   placeholder="선택"
                 />
               </td>
+              {/* 품명 */}
               <td className="border-base">
                 <SelectDropdown
                   className="td-base"
@@ -150,6 +166,7 @@ export default function MaterialTable() {
                   labelField="name"
                 />
               </td>
+              {/* 단위 */}
               <td className="border-base w-20">
                 <CommonInput
                   type="text"
@@ -158,6 +175,7 @@ export default function MaterialTable() {
                   readOnly={true}
                 />
               </td>
+              {/* 수량 */}
               <td className="border-base w-20">
                 <CommonInput
                   type="number"
@@ -167,6 +185,8 @@ export default function MaterialTable() {
                   onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
                 />
               </td>
+
+              {/* 재료비 */}
               <td className="border-base w-32">
                 <CommonInput
                   type="number"
@@ -176,6 +196,20 @@ export default function MaterialTable() {
                   onChange={handleUnitPriceChange1}
                 />
               </td>
+              <td className="border-base w-20">
+                <CommonInput
+                  type="number"
+                  className="td-base"
+                  value={quantity || ""}
+                  readOnly={true}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                />
+              </td>
+              <td className="border-base text-right font-medium">
+                {getTotalPrice().toLocaleString("ko-KR")} 원
+              </td>
+
+              {/* 노무비 */}
               <td className="border-base w-32">
                 <CommonInput
                   type="number"
@@ -185,6 +219,17 @@ export default function MaterialTable() {
                   onChange={handleUnitPriceChange2}
                 />
               </td>
+              <td className="border-base w-20">
+                <CommonInput
+                  type="number"
+                  className="td-base"
+                  value={quantity || ""}
+                  readOnly={true}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                />
+              </td>
+              <td className="border-base text-right font-medium"> {getTotalPrice().toLocaleString("ko-KR")} 원 </td>
+
               <td className="border-base w-32">
                 <CommonInput
                   type="number"
@@ -194,6 +239,17 @@ export default function MaterialTable() {
                   onChange={handleUnitPriceChange3}
                 />
               </td>
+              <td className="border-base w-20">
+                <CommonInput
+                  type="number"
+                  className="td-base"
+                  value={quantity || ""}
+                  readOnly={true}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                />
+              </td>
+              <td className="border-base text-right font-medium"> {getTotalPrice().toLocaleString("ko-KR")} 원 </td>
+
               <td className="border-base text-right font-medium">
                 {getTotalPrice().toLocaleString("ko-KR")} 원
               </td>
