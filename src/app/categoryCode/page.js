@@ -1,11 +1,10 @@
-'use client'
+"use client";
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import changeTypeName from "@/lib/helpers"
+import changeTypeName from "@/lib/helpers";
 import SelectDropdown from "@/src/component/ui/SelectDropDown";
 import { CommonInput } from "@/src/component/ui/InputComponents";
-
 
 export default function categoryCode() {
   const [activeTab, setActiveTab] = useState("공정");
@@ -17,7 +16,6 @@ export default function categoryCode() {
   const [inputUnitValue, setInputUnitValue] = useState("");
   const [selectProcess, setSelectProcess] = useState("");
 
-
   const loadData = async () => {
     try {
       const processRslt = await fetch("/api/categoryCode?type=process");
@@ -27,7 +25,6 @@ export default function categoryCode() {
       const productRslt = await fetch("/api/categoryCode?type=product");
       const productRsltJson = await productRslt.json();
       setProductData(productRsltJson);
-
     } catch (err) {
       console.log("err: " + err);
     }
@@ -42,29 +39,27 @@ export default function categoryCode() {
       setCurrentData(processData);
     } else if (activeTab === "품명") {
       setCurrentData(productData);
-    } 
+    }
   }, [activeTab, processData, productData]);
 
   //항목 추가.
   const addItem = async (tab) => {
-    
-    
     let type = changeTypeName(tab);
-    
+
     if (!inputNameValue) {
       alert("이름 입력값이 존재하지 않음.");
       return false;
     }
 
-    if(type === "product" && !inputUnitValue){
+    if (type === "product" && !inputUnitValue) {
       alert("단위 입력값이 존재하지 않음.");
       return false;
     }
 
     // 품명일 경우 공정 선택 유무 확인
-    if(type === "product"){
-      if(!selectProcess){
-        alert("공정을 선택 하세요.")
+    if (type === "product") {
+      if (!selectProcess) {
+        alert("공정을 선택 하세요.");
         return false;
       }
     }
@@ -79,7 +74,12 @@ export default function categoryCode() {
           type: type,
           name: inputNameValue,
           step1: type === "product" ? selectProcess : null,
-          step2: type === "process" ? "#" : type === "product" ? inputNameValue : null,
+          step2:
+            type === "process"
+              ? "#"
+              : type === "product"
+              ? inputNameValue
+              : null,
           unit: type === "product" ? inputUnitValue : null,
           regi_name: "관리자",
         }),
@@ -129,35 +129,39 @@ export default function categoryCode() {
           return item;
         })
       );
-    } 
+    }
 
-    try{
+    try {
       let type = changeTypeName(tab);
-      const resposne = await fetch("/api/categoryCode",{
-        method : "PUT",
+      const resposne = await fetch("/api/categoryCode", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: itemId
-          ,type : type
-          ,status : newStatus 
-        })
-      })
-    }catch (error){
-      console.error("사용 미사용 토글 오류:",error);
+          id: itemId,
+          type: type,
+          status: newStatus,
+        }),
+      });
+    } catch (error) {
+      console.error("사용 미사용 토글 오류:", error);
     }
   };
 
   const handlerSelectProcessChange = (e) => {
-    setSelectProcess(e.target.value)
-    console.log(selectProcess)
-  }
+    setSelectProcess(e.target.value);
+    console.log(selectProcess);
+  };
 
-  const handlerDeleteData = async (id,name,tab) => { 
-    if(confirm(`정말로 ${name} 을 삭제 하시겠습니까? 공정일 경우 하위 품명까지 전부 삭제 됩니다.`)){
-      try{ 
-        const resposne = await fetch("/api/categoryCode",{
+  const handlerDeleteData = async (id, name, tab) => {
+    if (
+      confirm(
+        `정말로 ${name} 을 삭제 하시겠습니까? 공정일 경우 하위 품명까지 전부 삭제 됩니다.`
+      )
+    ) {
+      try {
+        const resposne = await fetch("/api/categoryCode", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -165,17 +169,15 @@ export default function categoryCode() {
           body: JSON.stringify({
             name: name,
             id: id,
-            tab : tab
-
+            tab: tab,
           }),
-        })
+        });
         loadData();
-      }catch (err){
-        console.err("삭제 실패: ",err);
+      } catch (err) {
+        console.err("삭제 실패: ", err);
       }
     }
-  }
-
+  };
 
   return (
     <div>
@@ -202,13 +204,12 @@ export default function categoryCode() {
         <div className="flex space-x-3">
           {activeTab === "품명" && (
             <SelectDropdown
-                className="py-2 px-4 font-medium text-sm border-2 border-blue-500 rounded-lg"
-                onChange={handlerSelectProcessChange}
-                value={selectProcess}
-                items={processData}
-                placeholder="선택"
+              className="py-2 px-4 font-medium text-sm border-2 border-blue-500 rounded-lg"
+              onChange={handlerSelectProcessChange}
+              value={selectProcess}
+              items={processData}
+              placeholder="선택"
             />
-            
           )}
           <CommonInput
             type="text"
@@ -216,7 +217,7 @@ export default function categoryCode() {
             onChange={handleInputNameChange}
             className="py-2 px-4 font-medium text-sm border-2 border-blue-500 rounded-lg"
             placeholder={`${activeTab} 이름`}
-            />
+          />
           {activeTab === "품명" && (
             <CommonInput
               type="text"
@@ -227,7 +228,8 @@ export default function categoryCode() {
             />
           )}
           <button
-            className="btn-add"d
+            className="btn-add"
+            d
             onClick={() => addItem(activeTab)}
             disabled={!inputNameValue.trim()} // 입력값이 없으면 버튼 비활성화
           >
@@ -295,9 +297,11 @@ export default function categoryCode() {
                   </div>
                 </td>
                 <td className="border-base">
-                  <button 
+                  <button
                     className="w-full bg-red-400 hover:bg-red-500 text-white font-medium py-1 px-2 rounded-lg"
-                    onClick={() => handlerDeleteData(item.id,item.name,activeTab)}
+                    onClick={() =>
+                      handlerDeleteData(item.id, item.name, activeTab)
+                    }
                   >
                     삭제
                   </button>

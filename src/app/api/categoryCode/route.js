@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import executeQuery from '@/lib/db';
+import { executeQuery } from '@/lib/db';
 import changeTypeName from "@/lib/helpers"
 
 // 분류 코드 조회
