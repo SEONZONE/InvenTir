@@ -4,172 +4,150 @@
 import { useState, useEffect } from "react";
 import SelectDropdown from "@/src/component/ui/SelectDropDown";
 import { CommonInput } from "@/src/component/ui/InputComponents";
-import DatePicker from "react-datepicker"
-import 'react-datepicker/dist/react-datepicker.css'; // DatePicker CSS import
-import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns import
+import DatePicker from "react-datepicker";
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
 
 export default function ProjectCreationPage() {
+  // Project Info
   const [projectName, setProjectName] = useState("");
-  const [startDate, setStartDate] = useState(null); // Date 객체로 관리
-  const [endDate, setEndDate] = useState(null);     // Date 객체로 관리
-  const [projectDuration, setProjectDuration] = useState(""); // "YYYY-MM-DD ~ YYYY-MM-DD" 형식의 문자열
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [projectDuration, setProjectDuration] = useState("");
 
-  const [selectCategory, setSelectCategory] = useState("");
-  const [quantity, setQuantity] = useState(0);
-  const [unitPrice1, setUnitPrice1] = useState(0);
-  const [unitPrice2, setUnitPrice2] = useState(0);
-  const [unitPrice3, setUnitPrice3] = useState(0);
-  const [selectedSubCategory, setSelectedSubCategory] = useState("");
-  const [selectedUnit, setSelectedUnit] = useState("");
-  const [items, setItems] = useState([]);
-  const [categoryProcess, setCategoryProcess] = useState([]);
-  const [categoryProduct, setCategoryProduct] = useState([]);
+  // Category Data
+  const [allProcesses, setAllProcesses] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
 
-  // startDate 또는 endDate가 변경될 때 projectDuration 업데이트
+  // Current Item Input
+  const [selectedProcess, setSelectedProcess] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [currentUnit, setCurrentUnit] = useState("");
+
+  const [materialQty, setMaterialQty] = useState(0);
+  const [materialPrice, setMaterialPrice] = useState(0);
+
+  const [laborQty, setLaborQty] = useState(0);
+  const [laborPrice, setLaborPrice] = useState(0);
+
+  const [expensesQty, setExpensesQty] = useState(0);
+  const [expensesPrice, setExpensesPrice] = useState(0);
+
+  // Added Items List
+  const [addedItems, setAddedItems] = useState([]);
+
   useEffect(() => {
     if (startDate && endDate) {
-      setProjectDuration(
-        `${format(startDate, 'yyyy-MM-dd')} ~ ${format(endDate, 'yyyy-MM-dd')}`
-      );
+      setProjectDuration(`${format(startDate, 'yyyy-MM-dd')} ~ ${format(endDate, 'yyyy-MM-dd')}`);
     } else {
       setProjectDuration("");
     }
   }, [startDate, endDate]);
 
-  const handlerCategoryChange = (e) => {
-    const selectedProcess = e.target.value;
-    setSelectCategory(selectedProcess);
-    setSelectedSubCategory("");
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const processRes = await fetch("/api/categoryCode?type=process");
+        const processData = await processRes.json();
+        setAllProcesses(processData);
 
-    let filtered = categoryProduct.filter(
-      (item) => item.step1 === selectedProcess
-    );
-    setFilteredProducts(filtered);
-    filtered = null;
+        const productRes = await fetch("/api/categoryCode?type=product");
+        const productData = await productRes.json();
+        setAllProducts(productData);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        alert("분류 코드를 불러오는 데 실패했습니다.");
+      }
+    };
+    loadCategories();
+  }, []);
+
+  const handleProcessChange = (e) => {
+    const processName = e.target.value;
+    setSelectedProcess(processName);
+    setFilteredProducts(allProducts.filter(p => p.step1 === processName));
+    setSelectedProduct("");
+    setCurrentUnit("");
   };
 
-  const handleSubCategoryChange = (e) => {
-    let filtered = categoryProduct.filter(
-      (item) => item.id === parseInt(e.target.value)
-    );
-    setSelectedSubCategory(filtered[0].unit);
-    setSelectedUnit(filtered[0].unit);
+  const handleProductChange = (e) => {
+    const productId = e.target.value;
+    setSelectedProduct(productId);
+    const product = allProducts.find(p => p.id === parseInt(productId));
+    if (product) {
+      setCurrentUnit(product.unit || "");
+    }
   };
 
-  const handleUnitPriceChange1 = (e) => {
-    setUnitPrice1(parseInt(e.target.value) || 0);
-  };
-
-  const handleUnitPriceChange2 = (e) => {
-    setUnitPrice2(parseInt(e.target.value) || 0);
-  };
-
-  const handleUnitPriceChange3 = (e) => {
-    setUnitPrice3(parseInt(e.target.value) || 0);
-  };
-
-  const getTotalPrice = () => {
-    return (
-      quantity * unitPrice1 + quantity * unitPrice2 + quantity * unitPrice3 || 0
-    );
+  const clearInputFields = () => {
+    setSelectedProcess("");
+    setSelectedProduct("");
+    setCurrentUnit("");
+    setMaterialQty(0);
+    setMaterialPrice(0);
+    setLaborQty(0);
+    setLaborPrice(0);
+    setExpensesQty(0);
+    setExpensesPrice(0);
+    setFilteredProducts([]);
   };
 
   const addItem = () => {
-    if (!selectCategory || !selectedSubCategory || !selectedUnit) {
-      alert("모든 필드를 선택해 주세요");
+    if (!selectedProcess || !selectedProduct) {
+      alert("공정과 품명을 선택해주세요.");
       return;
     }
 
+    const product = allProducts.find(p => p.id === parseInt(selectedProduct));
     const newItem = {
-      id: Date.now(),
-      category: selectCategory,
-      subCategory: selectedSubCategory,
-      unit: selectedUnit,
-      quantity: quantity,
-      unitPrice1: unitPrice1,
-      unitPrice2: unitPrice2,
-      unitPrice3: unitPrice3,
-      totalPrice: getTotalPrice(),
+      temp_id: Date.now(),
+      category_code_id: parseInt(selectedProduct),
+      process_name: selectedProcess,
+      product_name: product.name,
+      unit: currentUnit,
+      material_quantity: materialQty,
+      material_unit_price: materialPrice,
+      labor_quantity: laborQty,
+      labor_unit_price: laborPrice,
+      expenses_quantity: expensesQty,
+      expenses_unit_price: expensesPrice,
     };
 
-    setItems([...items, newItem]);
-
-    // 초기화
-    setSelectCategory("");
-    setSelectedSubCategory("");
-    setSelectedUnit("");
-    setQuantity(0);
-    setUnitPrice1(0);
-    setUnitPrice2(0);
-    setUnitPrice3(0);
+    setAddedItems([...addedItems, newItem]);
+    clearInputFields();
   };
 
-  const removeItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
+  const removeItem = (temp_id) => {
+    setAddedItems(addedItems.filter((item) => item.temp_id !== temp_id));
   };
-
-  const loadCategory = async () => {
-    try {
-      const prcoess = await fetch("/api/categoryCode?type=process");
-      const processJson = await prcoess.json();
-      setCategoryProcess(processJson);
-
-      const product = await fetch("/api/categoryCode?type=product");
-      const productJson = await product.json();
-      setCategoryProduct(productJson);
-    } catch (err) {
-      console.log("err: " + err);
-    }
-  };
-
-  // 초기 데이터 로드
-  useEffect(() => {
-    loadCategory();
-  }, []);
 
   const handleSaveProject = async () => {
-    if (!projectName) {
-      alert("프로젝트명을 입력해주세요.");
-      return;
-    }
-    if (!startDate || !endDate) {
-      alert("프로젝트 기간을 선택해주세요.");
-      return;
-    }
-    if (startDate && endDate && startDate > endDate) {
-      alert("프로젝트 시작일은 종료일보다 늦을 수 없습니다.");
-      return;
-    }
-    if (items.length === 0) {
-      alert("추가된 자재가 없습니다. 자재를 추가해주세요.");
+    if (!projectName || !projectDuration || addedItems.length === 0) {
+      alert("프로젝트명, 기간, 자재를 모두 입력해주세요.");
       return;
     }
 
     try {
       const response = await fetch('/api/projects', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectName,
           projectDuration,
-          materials: items,
+          materials: addedItems,
         }),
       });
 
       if (response.ok) {
         alert('프로젝트가 성공적으로 저장되었습니다.');
-        // 저장 후 필요한 경우 페이지 이동 또는 상태 초기화
-        // router.push('/projectList'); // 예시: 프로젝트 목록 페이지로 이동
         setProjectName("");
         setStartDate(null);
         setEndDate(null);
-        setItems([]);
+        setAddedItems([]);
       } else {
         const errorData = await response.json();
-        alert(`프로젝트 저장 실패: ${errorData.message || response.statusText}`);
+        alert(`프로젝트 저장 실패: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving project:', error);
@@ -177,10 +155,24 @@ export default function ProjectCreationPage() {
     }
   };
 
+  const calculateSubTotal = (qty, price) => qty * price;
+  const calculateRowTotal = (item) => 
+    (item.material_quantity * item.material_unit_price) + 
+    (item.labor_quantity * item.labor_unit_price) + 
+    (item.expenses_quantity * item.expenses_unit_price);
+
+  const handleNumberInputChange = (setter) => (e) => {
+    const value = e.target.value;
+    // 빈 문자열이거나 숫자가 아닌 경우 0으로 처리
+    const parsedValue = value === '' ? 0 : parseInt(value, 10);
+    setter(isNaN(parsedValue) ? 0 : parsedValue);
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">프로젝트 생성</h1>
 
+      {/* Project Info */}
       <div className="mb-4 p-4 border rounded-lg shadow-sm bg-white">
         <div className="mb-2">
           <label htmlFor="projectName" className="block text-sm font-medium text-gray-700">
@@ -217,7 +209,7 @@ export default function ProjectCreationPage() {
               selectsEnd
               startDate={startDate}
               endDate={endDate}
-              minDate={startDate} // 시작일 이후만 선택 가능
+              minDate={startDate}
               dateFormat="yyyy-MM-dd"
               placeholderText="종료일"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -227,196 +219,104 @@ export default function ProjectCreationPage() {
       </div>
 
       <h2 className="text-xl font-bold mb-4">자재 선택</h2>
-
       <div className="overflow-x-auto bg-white rounded-lg shadow mb-8">
         <table className="w-full border-collapse">
           <thead>
-            {/* 첫 번째 행 - 대분류 */}
             <tr className="bg-gray-200">
-              <th className="th-base" rowSpan={3}>공정</th>
-              <th className="th-base" rowSpan={3}>품명</th>
-              <th className="th-base" rowSpan={3}>단위</th>
-              <th className="th-base" rowSpan={3}>수량</th>
+              <th className="th-base" rowSpan={2}>공정</th>
+              <th className="th-base" rowSpan={2}>품명</th>
+              <th className="th-base" rowSpan={2}>단위</th>
               <th className="th-base" colSpan={3}>재료비</th>
               <th className="th-base" colSpan={3}>노무비</th>
               <th className="th-base" colSpan={3}>경비</th>
-              <th className="th-base" rowSpan={3}>총합산</th>
-              <th className="th-base" rowSpan={3}>추가</th>
+              <th className="th-base" rowSpan={2}>추가</th>
             </tr>
-
-            {/* 두 번째 행 - 세부 항목 */}
             <tr className="bg-gray-100">
-              <th className="th-base">금액</th>
               <th className="th-base">수량</th>
-              <th className="th-base">재료비 합산</th>
-              <th className="th-base">금액</th>
+              <th className="th-base">단가</th>
+              <th className="th-base">합산</th>
               <th className="th-base">수량</th>
-              <th className="th-base">노무비 합산</th>
-              <th className="th-base">금액</th>
+              <th className="th-base">단가</th>
+              <th className="th-base">합산</th>
               <th className="th-base">수량</th>
-              <th className="th-base">경비 합산</th>
+              <th className="th-base">단가</th>
+              <th className="th-base">합산</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              {/* 공정 */}
               <td className="border-base">
                 <SelectDropdown
                   className="td-base"
-                  onChange={handlerCategoryChange}
-                  value={selectCategory}
-                  items={Array.isArray(categoryProcess) ? categoryProcess : []}
-                  placeholder="선택"
+                  onChange={handleProcessChange}
+                  value={selectedProcess}
+                  items={allProcesses}
+                  placeholder="공정"
+                  valueField="step1"
+                  labelField="name"
                 />
               </td>
-              {/* 품명 */}
               <td className="border-base">
                 <SelectDropdown
                   className="td-base"
-                  value={selectedSubCategory}
-                  onChange={handleSubCategoryChange}
-                  items={Array.isArray(filteredProducts) ? filteredProducts : []}
-                  placeholder="선택"
-                  disabled={!selectCategory}
+                  onChange={handleProductChange}
+                  value={selectedProduct}
+                  items={filteredProducts}
+                  placeholder="품명"
+                  disabled={!selectedProcess}
                   valueField="id"
                   labelField="name"
                 />
               </td>
-              {/* 단위 */}
-              <td className="border-base w-20">
-                <CommonInput
-                  type="text"
-                  className="td-base"
-                  value={selectedUnit}
-                  readOnly={true}
-                />
-              </td>
-              {/* 수량 */}
-              <td className="border-base w-20">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  value={quantity || ""}
-                  placeholder="수량"
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                />
-              </td>
-
+              <td className="border-base"><CommonInput className="td-base" type="text" value={currentUnit} readOnly /></td>
+              
               {/* 재료비 */}
-              <td className="border-base w-32">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  placeholder="재료비"
-                  value={unitPrice1 || ""}
-                  onChange={handleUnitPriceChange1}
-                />
-              </td>
-              <td className="border-base w-20">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  value={quantity || ""}
-                  readOnly={true}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                />
-              </td>
-              <td className="border-base text-right font-medium">
-                {getTotalPrice().toLocaleString("ko-KR")} 원
-              </td>
+              <td className="border-base"><CommonInput className="td-base" type="number" value={materialQty} onChange={handleNumberInputChange(setMaterialQty)} /></td>
+              <td className="border-base"><CommonInput className="td-base" type="number" value={materialPrice} onChange={handleNumberInputChange(setMaterialPrice)} /></td>
+              <td className="border-base text-right">{calculateSubTotal(materialQty, materialPrice).toLocaleString('ko-KR')}</td>
 
               {/* 노무비 */}
-              <td className="border-base w-32">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  placeholder="노무비"
-                  value={unitPrice2 || ""}
-                  onChange={handleUnitPriceChange2}
-                />
-              </td>
-              <td className="border-base w-20">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  value={quantity || ""}
-                  readOnly={true}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                />
-              </td>
-              <td className="border-base text-right font-medium"> {getTotalPrice().toLocaleString("ko-KR")} 원 </td>
+              <td className="border-base"><CommonInput className="td-base" type="number" value={laborQty} onChange={handleNumberInputChange(setLaborQty)} /></td>
+              <td className="border-base"><CommonInput className="td-base" type="number" value={laborPrice} onChange={handleNumberInputChange(setLaborPrice)} /></td>
+              <td className="border-base text-right">{calculateSubTotal(laborQty, laborPrice).toLocaleString('ko-KR')}</td>
 
-              <td className="border-base w-32">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  placeholder="경비"
-                  value={unitPrice3 || ""}
-                  onChange={handleUnitPriceChange3}
-                />
-              </td>
-              <td className="border-base w-20">
-                <CommonInput
-                  type="number"
-                  className="td-base"
-                  value={quantity || ""}
-                  readOnly={true}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                />
-              </td>
-              <td className="border-base text-right font-medium"> {getTotalPrice().toLocaleString("ko-KR")} 원 </td>
+              {/* 경비 */}
+              <td className="border-base"><CommonInput className="td-base" type="number" value={expensesQty} onChange={handleNumberInputChange(setExpensesQty)} /></td>
+              <td className="border-base"><CommonInput className="td-base" type="number" value={expensesPrice} onChange={handleNumberInputChange(setExpensesPrice)} /></td>
+              <td className="border-base text-right">{calculateSubTotal(expensesQty, expensesPrice).toLocaleString('ko-KR')}</td>
 
-              <td className="border-base text-right font-medium">
-                {getTotalPrice().toLocaleString("ko-KR")} 원
-              </td>
-              <td className="border-base text-right font-medium">
-                <button className="btn-add" onClick={addItem}>
-                  추가
-                </button>
-              </td>
+              <td className="border-base"><button className="btn-add" onClick={addItem}>추가</button></td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* 추가된 자재 리스트 */}
       <h2 className="text-xl font-bold mb-4">추가된 자재 목록</h2>
-      {items.length === 0 ? (
-        <p>추가된 자재가 없습니다.</p>
-      ) : (
+      {addedItems.length > 0 && (
         <div className="overflow-x-auto bg-white rounded-lg shadow">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-200">
                 <th className="th-base">공정</th>
                 <th className="th-base">품명</th>
-                <th className="th-base">단위</th>
-                <th className="th-base">수량</th>
-                <th className="th-base">재료비</th>
-                <th className="th-base">노무비</th>
-                <th className="th-base">경비</th>
-                <th className="th-base">총합산</th>
+                <th className="th-base">재료비(수량/단가)</th>
+                <th className="th-base">노무비(수량/단가)</th>
+                <th className="th-base">경비(수량/단가)</th>
+                <th className="th-base">전체 합산</th>
                 <th className="th-base">삭제</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td className="border-base">{item.category}</td>
-                  <td className="border-base">{item.subCategory}</td>
-                  <td className="border-base">{item.unit}</td>
-                  <td className="border-base">{item.quantity}</td>
-                  <td className="border-base text-right">{item.unitPrice1.toLocaleString("ko-KR")} 원</td>
-                  <td className="border-base text-right">{item.unitPrice2.toLocaleString("ko-KR")} 원</td>
-                  <td className="border-base text-right">{item.unitPrice3.toLocaleString("ko-KR")} 원</td>
-                  <td className="border-base text-right">{item.totalPrice.toLocaleString("ko-KR")} 원</td>
+              {addedItems.map((item) => (
+                <tr key={item.temp_id}>
+                  <td className="border-base">{item.process_name}</td>
+                  <td className="border-base">{item.product_name}</td>
+                  <td className="border-base text-center">{`${item.material_quantity} / ${item.material_unit_price.toLocaleString('ko-KR')}`}</td>
+                  <td className="border-base text-center">{`${item.labor_quantity} / ${item.labor_unit_price.toLocaleString('ko-KR')}`}</td>
+                  <td className="border-base text-center">{`${item.expenses_quantity} / ${item.expenses_unit_price.toLocaleString('ko-KR')}`}</td>
+                  <td className="border-base text-right">{calculateRowTotal(item).toLocaleString('ko-KR')}</td>
                   <td className="border-base">
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
-                    >
-                      삭제
-                    </button>
+                    <button onClick={() => removeItem(item.temp_id)} className="btn-remove">삭제</button>
                   </td>
                 </tr>
               ))}
@@ -426,12 +326,7 @@ export default function ProjectCreationPage() {
       )}
 
       <div className="mt-8 text-right">
-        <button
-          onClick={handleSaveProject}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          프로젝트 저장
-        </button>
+        <button onClick={handleSaveProject} className="btn-save">프로젝트 저장</button>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export function CommonInput({
         value={value}
         onChange={onChange}
         className={className}
-        placeholder={`${placeholder ? placeholder : ""} 입력`}
+        placeholder={`${placeholder ? placeholder : "입력"}`}
     />
     );
   }

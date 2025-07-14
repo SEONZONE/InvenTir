@@ -7,6 +7,12 @@
     .btn-add {
         @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-2 rounded-lg;
     }
+    .btn-remove {
+        @apply bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-2 rounded-lg;
+    }
+    .btn-save {
+        @apply bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg;
+    }
 
     /* Table */
     .border-300 { 
