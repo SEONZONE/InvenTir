@@ -1,72 +1,63 @@
+import { supabase } from '@/lib/supabaseClient';
 import { NextResponse } from 'next/server';
-import { executeQuery } from '@/lib/db';
-import changeTypeName from "@/lib/helpers"
 
 // 분류 코드 조회
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type')
-    const status = searchParams.get('status')
-    const name = searchParams.get('name')
-    
-    let query = 'SELECT  * FROM CATEGORY_CODE WHERE type = ?';
-    let values = [type];
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+    const status = searchParams.get('status');
+    const name = searchParams.get('name');
 
+    let query = supabase.from('CATEGORY_CODE').select('*');
+
+    if (type) {
+      query = query.eq('type', type);
+    }
     if (status) {
-      query += ' AND status = ?';
-      values.push(status);
+      query = query.eq('status', status);
     }
     if (name) {
-      query += ' AND name = ?';
-      values.push(name);
+      query = query.eq('name', name);
     }
 
+    const { data, error } = await query;
 
-    const results = await executeQuery({
-      query: query
-      ,values: values
-    });
-    return NextResponse.json(results);
+    if (error) throw error;
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-
-
 // 분류 코드 추가
-export async function POST(request){
-  try{
-    const query = 'INSERT INTO CATEGORY_CODE (type, step1, step2, name, regi_name, date_added, status,unit) VALUES (?, ?, ?, ?, ?, CURDATE(), ?,?)';
-    let values = [];
-    
+export async function POST(request) {
+  try {
     const body = await request.json();
-    const { type, name, step1, step2, regi_name ,status, unit} = body;
-    
-    // 타입 별 validation 추가 
-    // if(!(type && (type === 'process' || type === 'product' || type === 'unit' || type === 'scale'))){
-    if(!(type && (type === 'process' || type === 'product'))){
-      return NextResponse.json({ error: "type 인자가 존재하지 않거나 process, product, unit 중 일치하지 않습니다.."}, { status: 400 });  
-    }
-    
-    //필수값 추가
-    if(!name){
-      return NextResponse.json({ error: "name 인자가 존재하지 않습니다.."}, { status: 400 });  
-    }
-    
-    if(type === 'process'){
-      values = [type,name,'#',name,'관리자','Y',unit];
-    }else if(type === 'product'){
-      values = [type,step1,name,name,'관리자','Y',unit];
+    const { type, name, step1, step2, regi_name, status, unit } = body;
+
+    if (!type || !['process', 'product'].includes(type)) {
+      return NextResponse.json({ error: "type 인자가 존재하지 않거나 process, product 중 일치하지 않습니다.." }, { status: 400 });
     }
 
-    const results = await executeQuery({
-      query: query
-      ,values: values
-    });
-    return NextResponse.json(results);
+    if (!name) {
+      return NextResponse.json({ error: "name 인자가 존재하지 않습니다.." }, { status: 400 });
+    }
+
+    let insertData = {};
+    if (type === 'process') {
+      insertData = { type, step1: name, step2: '#', name, regi_name: '관리자', date_added: new Date(), status: 'Y', unit };
+    } else if (type === 'product') {
+      insertData = { type, step1, step2: name, name, regi_name: '관리자', date_added: new Date(), status: 'Y', unit };
+    }
+
+    const { data, error } = await supabase.from('CATEGORY_CODE').insert([insertData]).select();
+
+    if (error) throw error;
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -74,19 +65,20 @@ export async function POST(request){
 }
 
 // 사용 여부 수정
-export async function PUT(request){
-  try{
-    const query = 'UPDATE CATEGORY_CODE SET status = ? WHERE id = ? ';
-    let values = [];
-    
+export async function PUT(request) {
+  try {
     const body = await request.json();
     const { status, id } = body;
-    
-    const results = await executeQuery({
-      query: query
-      ,values: [status,id]
-    });
-    return NextResponse.json(results);
+
+    const { data, error } = await supabase
+      .from('CATEGORY_CODE')
+      .update({ status })
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -94,37 +86,27 @@ export async function PUT(request){
 }
 
 // 분류 코드 삭제
-export async function DELETE(request){
-  try{
-    let values = [];
-    let query;
+export async function DELETE(request) {
+  try {
     const body = await request.json();
     const { name, id, tab } = body;
-    const type = changeTypeName(tab);
-    
+    const type = tab; // Assuming tab is already the correct type, e.g., 'process'
 
-    if(type === "process"){
-      // process 타입일 경우, CATEGORY_CODE에서 해당 항목 삭제
-      query = 'DELETE FROM CATEGORY_CODE WHERE id = ? AND name = ?';
-      values = [id, name];
-      
-      // 그 다음 name을 step1으로 사용하는 데이터들도 삭제
-      const additionalQuery = 'DELETE FROM CATEGORY_CODE WHERE step1 = ?';
-      await executeQuery({
-        query: additionalQuery,
-        values: [name]
-      });
+    if (type === "process") {
+      // First, delete related product entries
+      const { error: productError } = await supabase.from('CATEGORY_CODE').delete().eq('step1', name);
+      if (productError) throw productError;
+
+      // Then, delete the process entry
+      const { error: processError } = await supabase.from('CATEGORY_CODE').delete().eq('id', id);
+      if (processError) throw processError;
+
     } else {
-      // 다른 타입들의 경우 기본 쿼리 실행
-      query = 'DELETE FROM CATEGORY_CODE WHERE id = ? AND name = ?';
-      values = [id, name];
+      const { error } = await supabase.from('CATEGORY_CODE').delete().eq('id', id);
+      if (error) throw error;
     }
 
-    const results = await executeQuery({
-      query: query
-      ,values: [id,name]
-    });
-    return NextResponse.json(results);
+    return NextResponse.json({ message: "Delete successful" });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
