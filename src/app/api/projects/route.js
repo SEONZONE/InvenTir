@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { projectName, projectDuration, materials } = await request.json();
+  const { projectName, projectDuration,projectDescription, materials } = await request.json();
 
   // 필수 데이터 검증
   if (
@@ -19,13 +19,18 @@ export async function POST(request) {
 
   try {
     // 1. PROJECTS 테이블에 프로젝트 정보 삽입
+    // TODO 
+    // 1. 관리자 이름 세션에서 등록
+    
     const { data: projectData, error: projectError } = await supabase
       .from('PROJECTS')
       .insert([
         {
+          client_name: '관리자',
           project_name: projectName,
           start_date: projectDuration.split("~")[0].trim(),
           end_date: projectDuration.split("~")[1].trim(),
+          description : projectDescription,
         },
       ])
       .select();

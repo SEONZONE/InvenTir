@@ -9,11 +9,19 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 
 export default function ProjectCreationPage() {
+  // Calculation Functions
+  const calculateSubTotal = (qty, price) => qty * price;
+  const calculateRowTotal = (item) =>
+    (item.material_quantity * item.material_unit_price) +
+    (item.labor_quantity * item.labor_unit_price) +
+    (item.expenses_quantity * item.expenses_unit_price);
+
   // Project Info
   const [projectName, setProjectName] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [projectDuration, setProjectDuration] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
 
   // Category Data
   const [allProcesses, setAllProcesses] = useState([]);
@@ -24,19 +32,16 @@ export default function ProjectCreationPage() {
   const [selectedProcess, setSelectedProcess] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [currentUnit, setCurrentUnit] = useState("");
-
-  const [materialQty, setMaterialQty] = useState(0);
+  const [quantity, setQuantity] = useState(0);
   const [materialPrice, setMaterialPrice] = useState(0);
-
-  const [laborQty, setLaborQty] = useState(0);
   const [laborPrice, setLaborPrice] = useState(0);
-
-  const [expensesQty, setExpensesQty] = useState(0);
   const [expensesPrice, setExpensesPrice] = useState(0);
+  const [rowTotalPrice, setRowTotalPrice] = useState(0);
 
   // Added Items List
   const [addedItems, setAddedItems] = useState([]);
 
+  // Effect to update project duration string
   useEffect(() => {
     if (startDate && endDate) {
       setProjectDuration(`${format(startDate, 'yyyy-MM-dd')} ~ ${format(endDate, 'yyyy-MM-dd')}`);
@@ -45,6 +50,21 @@ export default function ProjectCreationPage() {
     }
   }, [startDate, endDate]);
 
+  
+  useEffect(() => {
+    const currentItem = {
+      material_quantity: quantity,
+      material_unit_price: materialPrice,
+      labor_quantity: quantity,
+      labor_unit_price: laborPrice,
+      expenses_quantity: quantity,
+      expenses_unit_price: expensesPrice,
+    };
+    const total = calculateRowTotal(currentItem);
+    setRowTotalPrice(total);
+  }, [quantity, materialPrice, laborPrice, expensesPrice]);
+
+  // Effect to load category data
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -84,11 +104,9 @@ export default function ProjectCreationPage() {
     setSelectedProcess("");
     setSelectedProduct("");
     setCurrentUnit("");
-    setMaterialQty(0);
+    setQuantity(0);
     setMaterialPrice(0);
-    setLaborQty(0);
     setLaborPrice(0);
-    setExpensesQty(0);
     setExpensesPrice(0);
     setFilteredProducts([]);
   };
@@ -106,11 +124,11 @@ export default function ProjectCreationPage() {
       process_name: selectedProcess,
       product_name: product.name,
       unit: currentUnit,
-      material_quantity: materialQty,
+      material_quantity: quantity,
       material_unit_price: materialPrice,
-      labor_quantity: laborQty,
+      labor_quantity: quantity,
       labor_unit_price: laborPrice,
-      expenses_quantity: expensesQty,
+      expenses_quantity: quantity,
       expenses_unit_price: expensesPrice,
     };
 
@@ -135,6 +153,7 @@ export default function ProjectCreationPage() {
         body: JSON.stringify({
           projectName,
           projectDuration,
+          projectDescription,
           materials: addedItems,
         }),
       });
@@ -154,12 +173,6 @@ export default function ProjectCreationPage() {
       alert('프로젝트 저장 중 오류가 발생했습니다.');
     }
   };
-
-  const calculateSubTotal = (qty, price) => qty * price;
-  const calculateRowTotal = (item) => 
-    (item.material_quantity * item.material_unit_price) + 
-    (item.labor_quantity * item.labor_unit_price) + 
-    (item.expenses_quantity * item.expenses_unit_price);
 
   const handleNumberInputChange = (setter) => (e) => {
     const value = e.target.value;
@@ -216,6 +229,19 @@ export default function ProjectCreationPage() {
             />
           </div>
         </div>
+        <div className="mb-2">
+          <label htmlFor="projectDescription" className="block text-sm font-medium text-gray-700">
+            설명
+          </label>
+          <CommonInput
+            type="text"
+            id="projectDescription"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            value={projectDescription}
+            onChange={(e) => setProjectDescription(e.target.value)}
+            placeholder="설명을 입력하세요"
+          />
+        </div>
       </div>
 
       <h2 className="text-xl font-bold mb-4">자재 선택</h2>
@@ -226,25 +252,25 @@ export default function ProjectCreationPage() {
               <th className="th-base" rowSpan={2}>공정</th>
               <th className="th-base" rowSpan={2}>품명</th>
               <th className="th-base" rowSpan={2}>단위</th>
-              <th className="th-base" colSpan={3}>재료비</th>
-              <th className="th-base" colSpan={3}>노무비</th>
-              <th className="th-base" colSpan={3}>경비</th>
+              <th className="th-base" rowSpan={2}>수량</th>
+              <th className="th-base" colSpan={2}>재료비</th>
+              <th className="th-base" colSpan={2}>노무비</th>
+              <th className="th-base" colSpan={2}>경비</th>
+              <th className="th-base" rowSpan={2}>합계</th>
               <th className="th-base" rowSpan={2}>추가</th>
             </tr>
             <tr className="bg-gray-100">
-              <th className="th-base">수량</th>
               <th className="th-base">단가</th>
               <th className="th-base">합산</th>
-              <th className="th-base">수량</th>
               <th className="th-base">단가</th>
               <th className="th-base">합산</th>
-              <th className="th-base">수량</th>
               <th className="th-base">단가</th>
               <th className="th-base">합산</th>
             </tr>
           </thead>
           <tbody>
             <tr>
+              {/* 공정 */}
               <td className="border-base">
                 <SelectDropdown
                   className="td-base"
@@ -256,6 +282,7 @@ export default function ProjectCreationPage() {
                   labelField="name"
                 />
               </td>
+              {/* 품명 */}
               <td className="border-base">
                 <SelectDropdown
                   className="td-base"
@@ -268,22 +295,26 @@ export default function ProjectCreationPage() {
                   labelField="name"
                 />
               </td>
+              {/* 단위 */}
               <td className="border-base"><CommonInput className="td-base" type="text" value={currentUnit} readOnly /></td>
               
+              {/* 수량 */}
+              <td className="border-base"><CommonInput className="td-base" type="number" value={quantity} onChange={handleNumberInputChange(setQuantity)}/></td>
+              
               {/* 재료비 */}
-              <td className="border-base"><CommonInput className="td-base" type="number" value={materialQty} onChange={handleNumberInputChange(setMaterialQty)} /></td>
               <td className="border-base"><CommonInput className="td-base" type="number" value={materialPrice} onChange={handleNumberInputChange(setMaterialPrice)} /></td>
-              <td className="border-base text-right">{calculateSubTotal(materialQty, materialPrice).toLocaleString('ko-KR')}</td>
+              <td className="border-base text-right">{calculateSubTotal(quantity, materialPrice).toLocaleString('ko-KR')}</td>
 
               {/* 노무비 */}
-              <td className="border-base"><CommonInput className="td-base" type="number" value={laborQty} onChange={handleNumberInputChange(setLaborQty)} /></td>
               <td className="border-base"><CommonInput className="td-base" type="number" value={laborPrice} onChange={handleNumberInputChange(setLaborPrice)} /></td>
-              <td className="border-base text-right">{calculateSubTotal(laborQty, laborPrice).toLocaleString('ko-KR')}</td>
+              <td className="border-base text-right">{calculateSubTotal(quantity, laborPrice).toLocaleString('ko-KR')}</td>
 
               {/* 경비 */}
-              <td className="border-base"><CommonInput className="td-base" type="number" value={expensesQty} onChange={handleNumberInputChange(setExpensesQty)} /></td>
               <td className="border-base"><CommonInput className="td-base" type="number" value={expensesPrice} onChange={handleNumberInputChange(setExpensesPrice)} /></td>
-              <td className="border-base text-right">{calculateSubTotal(expensesQty, expensesPrice).toLocaleString('ko-KR')}</td>
+              <td className="border-base text-right">{calculateSubTotal(quantity, expensesPrice).toLocaleString('ko-KR')}</td>
+
+              {/* 합계 */}
+              <td className="border-base text-right">{rowTotalPrice.toLocaleString('ko-KR')}</td>
 
               <td className="border-base"><button className="btn-add" onClick={addItem}>추가</button></td>
             </tr>
@@ -299,9 +330,9 @@ export default function ProjectCreationPage() {
               <tr className="bg-gray-200">
                 <th className="th-base">공정</th>
                 <th className="th-base">품명</th>
-                <th className="th-base">재료비(수량/단가)</th>
-                <th className="th-base">노무비(수량/단가)</th>
-                <th className="th-base">경비(수량/단가)</th>
+                <th className="th-base">재료비(단가)</th>
+                <th className="th-base">노무비(단가)</th>
+                <th className="th-base">경비(단가)</th>
                 <th className="th-base">전체 합산</th>
                 <th className="th-base">삭제</th>
               </tr>
@@ -311,10 +342,10 @@ export default function ProjectCreationPage() {
                 <tr key={item.temp_id}>
                   <td className="border-base">{item.process_name}</td>
                   <td className="border-base">{item.product_name}</td>
-                  <td className="border-base text-center">{`${item.material_quantity} / ${item.material_unit_price.toLocaleString('ko-KR')}`}</td>
-                  <td className="border-base text-center">{`${item.labor_quantity} / ${item.labor_unit_price.toLocaleString('ko-KR')}`}</td>
-                  <td className="border-base text-center">{`${item.expenses_quantity} / ${item.expenses_unit_price.toLocaleString('ko-KR')}`}</td>
-                  <td className="border-base text-right">{calculateRowTotal(item).toLocaleString('ko-KR')}</td>
+                  <td className="border-base text-center">{`${item.material_unit_price.toLocaleString('ko-KR')}원`}</td>
+                  <td className="border-base text-center">{`${item.labor_unit_price.toLocaleString('ko-KR')}원`}</td>
+                  <td className="border-base text-center">{`${item.expenses_unit_price.toLocaleString('ko-KR')}원`}</td>
+                  <td className="border-base text-right">{calculateRowTotal(item).toLocaleString('ko-KR')}원</td>
                   <td className="border-base">
                     <button onClick={() => removeItem(item.temp_id)} className="btn-remove">삭제</button>
                   </td>
