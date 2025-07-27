@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { projectName, projectDuration,projectDescription, materials } = await request.json();
+  const { projectName, projectDuration,projectDescription,projectClient,totalPrice, materials } = await request.json();
 
   // 필수 데이터 검증
   if (
@@ -31,6 +31,8 @@ export async function POST(request) {
           start_date: projectDuration.split("~")[0].trim(),
           end_date: projectDuration.split("~")[1].trim(),
           description : projectDescription,
+          budget : totalPrice,
+          client_name : projectClient,
         },
       ])
       .select();

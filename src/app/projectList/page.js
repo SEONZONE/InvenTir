@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect,useState } from 'react';
-import { formatDate,formatTime } from "@/lib/helpers";
+import { formatDate,formatTime,formatWon } from "@/lib/helpers";
 
 export default function ProjectListPage() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function ProjectListPage() {
           <thead>
             <tr className="bg-gray-200">
               <th className="th-base">프로젝트명</th>
-              <th className="th-base">클라이언트명</th>
+              <th className="th-base">고객명</th>
               <th className="th-base">시작일</th>
               <th className="th-base">종료일</th>
               <th className="th-base">상태</th>
@@ -55,12 +55,12 @@ export default function ProjectListPage() {
               {projectsData.map((item) => (
                <tr key={item.project_id}>
                 <td className="border-base">{item.project_name}</td>
-                <td className="border-base">{item.project_client_name}</td>
+                <td className="border-base">{item.client_name}</td>
                 <td className="border-base">{formatDate(item.start_date)}</td>
                 <td className="border-base">{formatDate(item.end_date)}</td>
                 <td className="border-base">{item.status}</td>
                 <td className="border-base">{item.description}</td>
-                <td className="border-base text-right">{item.budget}</td>
+                <td className="border-base text-right">{formatWon(item.budget)}</td>
                 <td className="border-base">{formatTime(item.created_at)}</td>
                 <td className="border-base">{formatTime(item.updated_at)}</td>
               </tr>

@@ -11,10 +11,12 @@ import { format } from 'date-fns';
 export default function ProjectCreationPage() {
   // Calculation Functions
   const calculateSubTotal = (qty, price) => qty * price;
-  const calculateRowTotal = (item) =>
-    (item.material_quantity * item.material_unit_price) +
-    (item.labor_quantity * item.labor_unit_price) +
-    (item.expenses_quantity * item.expenses_unit_price);
+  function calculateRowTotal(item) {
+    const materialTotal = item.material_quantity * item.material_unit_price;
+    const laborTotal = item.labor_quantity * item.labor_unit_price;
+    const expensesTotal = item.expenses_quantity * item.expenses_unit_price;
+    return materialTotal + laborTotal + expensesTotal;
+  }
 
   // Project Info
   const [projectName, setProjectName] = useState("");
@@ -22,6 +24,8 @@ export default function ProjectCreationPage() {
   const [endDate, setEndDate] = useState(null);
   const [projectDuration, setProjectDuration] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
+  const [projectClient, setProjectClient] = useState("");
+  const [totalPrice, setTotalPrice] = useState(0);
 
   // Category Data
   const [allProcesses, setAllProcesses] = useState([]);
@@ -82,6 +86,12 @@ export default function ProjectCreationPage() {
     };
     loadCategories();
   }, []);
+
+  // 총합계 계산
+  useEffect(() => { 
+    const AddTotalPrice = addedItems.reduce((total, item) => total + calculateRowTotal(item), 0);
+    setTotalPrice(AddTotalPrice);
+  }, [addedItems]);
 
   const handleProcessChange = (e) => {
     const processName = e.target.value;
@@ -154,6 +164,8 @@ export default function ProjectCreationPage() {
           projectName,
           projectDuration,
           projectDescription,
+          projectClient,
+          totalPrice,
           materials: addedItems,
         }),
       });
@@ -240,6 +252,19 @@ export default function ProjectCreationPage() {
             value={projectDescription}
             onChange={(e) => setProjectDescription(e.target.value)}
             placeholder="설명을 입력하세요"
+          />
+        </div>
+        <div className="mb-2">
+          <label htmlFor="projectClient" className="block text-sm font-medium text-gray-700">
+            고객명
+          </label>
+          <CommonInput
+            type="text"
+            id="projectClient"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            value={projectClient}
+            onChange={(e) => setProjectClient(e.target.value)}
+            placeholder="고객명을 입력하세요"
           />
         </div>
       </div>
@@ -353,6 +378,10 @@ export default function ProjectCreationPage() {
               ))}
             </tbody>
           </table>
+          <div className="flex justify-end items-center p-4 font-bold text-lg">
+            <span>총합계:</span>
+            <span className="ml-2">{totalPrice.toLocaleString('ko-KR')}원</span>
+          </div>
         </div>
       )}
 
