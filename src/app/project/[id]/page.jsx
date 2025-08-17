@@ -1,11 +1,12 @@
 import { supabase } from "@/lib/supabaseClient";
+import ProjectForm from "@/src/component/ui/ProjectForm";
 
 export default async function ProjectDetailPage({ params }) {
   const { id } = params;
   const { data: project, error } = await supabase
     .from("PROJECTS")
     .select(
-    `
+      `
             *,
             PROJECT_MATERIALS(
                 *,
@@ -15,6 +16,6 @@ export default async function ProjectDetailPage({ params }) {
     )
     .eq("project_id", id)
     .single();
-  console.log(project);
-  console.log(error);
+  console.log(JSON.stringify(project));
+  return <ProjectForm initialData={project} />;
 }

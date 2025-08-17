@@ -21,13 +21,7 @@ export default function ProjectCreationPage() {
 
   // Project Info
   const [projectInfo, setProjectInfo] = useState({});
-  // const [projectInfo.project_name, setProjectName] = useState("");
-  // const [startDate, setStartDate] = useState(null);
-  // const [endDate, setEndDate] = useState(null);
-  // const [projectDescription, setProjectDescription] = useState("");
-  // const [projectClient, setProjectClient] = useState("");
-  // const [projectDuration, setProjectDuration] = useState("");
-  
+
   
   // Category Data
   const [allProcesses, setAllProcesses] = useState([]);
@@ -48,14 +42,6 @@ export default function ProjectCreationPage() {
   // Added Items List
   const [addedItems, setAddedItems] = useState([]);
 
-  // Effect to update project duration string
-  // useEffect(() => {
-  //   if (startDate && endDate) {
-  //     setProjectDuration(`${format(startDate, 'yyyy-MM-dd')} ~ ${format(endDate, 'yyyy-MM-dd')}`);
-  //   } else {
-  //     setProjectDuration("");
-  //   }
-  // }, [startDate, endDate]);
 
   
   useEffect(() => {
