@@ -2,17 +2,17 @@ import { supabase } from '@/lib/supabaseClient';
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { projectName, projectDuration,projectDescription,projectClient,totalPrice, materials } = await request.json();
-
+  const { client_name,description,start_date,end_date,project_name,totalPrice, materials } = await request.json();
   // 필수 데이터 검증
   if (
-    !projectName ||
-    !projectDuration ||
+    !project_name ||
+    !start_date ||
+    !end_date ||
     !materials ||
     materials.length === 0
   ) {
     return NextResponse.json(
-      { message: "Project name, duration, and materials are required." },
+      { message: "Project name, , and materials are required." },
       { status: 400 }
     );
   }
@@ -27,12 +27,12 @@ export async function POST(request) {
       .insert([
         {
           client_name: '관리자',
-          project_name: projectName,
-          start_date: projectDuration.split("~")[0].trim(),
-          end_date: projectDuration.split("~")[1].trim(),
-          description : projectDescription,
+          project_name: project_name,
+          start_date: start_date,
+          end_date: end_date,
+          description : description,
           budget : totalPrice,
-          client_name : projectClient,
+          client_name : client_name,
         },
       ])
       .select();

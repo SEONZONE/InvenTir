@@ -1,25 +1,26 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useEffect,useState } from 'react';
-import { formatDate,formatTime,formatWon } from "@/lib/helpers";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { formatDate, formatTime, formatWon } from "@/lib/helpers";
+import Link from "next/link";
 
 export default function ProjectListPage() {
   const router = useRouter();
   const handleCreateProject = () => {
-    router.push('/select');
+    router.push("/select");
   };
   const [projectsData, setProjectsData] = useState([]);
 
   const loadProjects = async () => {
     try {
-      const response = await fetch('/api/projects');
+      const response = await fetch("/api/projects");
       setProjectsData(await response.json());
     } catch (error) {
       console.error("Failed to load project list:", error);
     }
   };
-  console.log(JSON.stringify(projectsData[0]))
+  console.log(JSON.stringify(projectsData[0]));
   useEffect(() => {
     loadProjects();
   }, []);
@@ -52,19 +53,25 @@ export default function ProjectListPage() {
             </tr>
           </thead>
           <tbody>
-              {projectsData.map((item) => (
-               <tr key={item.project_id}>
-                <td className="border-base">{item.project_name}</td>
+            {projectsData.map((item) => (
+              <tr key={item.project_id}>
+                <td className="border-base">
+                  <Link href={`/project/${item.project_id}`} className="hover:underline hover:text-blue-600">
+                    {item.project_name}
+                  </Link>
+                </td>
                 <td className="border-base">{item.client_name}</td>
                 <td className="border-base">{formatDate(item.start_date)}</td>
                 <td className="border-base">{formatDate(item.end_date)}</td>
                 <td className="border-base">{item.status}</td>
                 <td className="border-base">{item.description}</td>
-                <td className="border-base text-right">{formatWon(item.budget)}</td>
+                <td className="border-base text-right">
+                  {formatWon(item.budget)}
+                </td>
                 <td className="border-base">{formatTime(item.created_at)}</td>
                 <td className="border-base">{formatTime(item.updated_at)}</td>
               </tr>
-              ))}
+            ))}
           </tbody>
         </table>
       </div>

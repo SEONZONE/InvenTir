@@ -7,6 +7,7 @@ import { CommonInput } from "@/src/component/ui/InputComponents";
 import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
+import ProjectForm from "@/src/component/ui/ProjectForm";
 
 export default function ProjectCreationPage() {
   // Calculation Functions
@@ -19,18 +20,20 @@ export default function ProjectCreationPage() {
   }
 
   // Project Info
-  const [projectName, setProjectName] = useState("");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [projectDuration, setProjectDuration] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
-  const [projectClient, setProjectClient] = useState("");
-  const [totalPrice, setTotalPrice] = useState(0);
-
+  const [projectInfo, setProjectInfo] = useState({});
+  // const [projectInfo.project_name, setProjectName] = useState("");
+  // const [startDate, setStartDate] = useState(null);
+  // const [endDate, setEndDate] = useState(null);
+  // const [projectDescription, setProjectDescription] = useState("");
+  // const [projectClient, setProjectClient] = useState("");
+  // const [projectDuration, setProjectDuration] = useState("");
+  
+  
   // Category Data
   const [allProcesses, setAllProcesses] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
 
   // Current Item Input
   const [selectedProcess, setSelectedProcess] = useState("");
@@ -46,13 +49,13 @@ export default function ProjectCreationPage() {
   const [addedItems, setAddedItems] = useState([]);
 
   // Effect to update project duration string
-  useEffect(() => {
-    if (startDate && endDate) {
-      setProjectDuration(`${format(startDate, 'yyyy-MM-dd')} ~ ${format(endDate, 'yyyy-MM-dd')}`);
-    } else {
-      setProjectDuration("");
-    }
-  }, [startDate, endDate]);
+  // useEffect(() => {
+  //   if (startDate && endDate) {
+  //     setProjectDuration(`${format(startDate, 'yyyy-MM-dd')} ~ ${format(endDate, 'yyyy-MM-dd')}`);
+  //   } else {
+  //     setProjectDuration("");
+  //   }
+  // }, [startDate, endDate]);
 
   
   useEffect(() => {
@@ -151,7 +154,7 @@ export default function ProjectCreationPage() {
   };
 
   const handleSaveProject = async () => {
-    if (!projectName || !projectDuration || addedItems.length === 0) {
+    if (!projectInfo.project_name || !projectInfo.start_date || !projectInfo.end_date || addedItems.length === 0) {
       alert("프로젝트명, 기간, 자재를 모두 입력해주세요.");
       return;
     }
@@ -161,10 +164,9 @@ export default function ProjectCreationPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projectName,
-          projectDuration,
-          projectDescription,
-          projectClient,
+          ...projectInfo,
+          start_date: format(projectInfo.start_date, 'yyyy-MM-dd'),
+          end_date: format(projectInfo.end_date, 'yyyy-MM-dd'),
           totalPrice,
           materials: addedItems,
         }),
@@ -172,9 +174,7 @@ export default function ProjectCreationPage() {
 
       if (response.ok) {
         alert('프로젝트가 성공적으로 저장되었습니다.');
-        setProjectName("");
-        setStartDate(null);
-        setEndDate(null);
+        setProjectInfo({});
         setAddedItems([]);
       } else {
         const errorData = await response.json();
@@ -193,81 +193,16 @@ export default function ProjectCreationPage() {
     setter(isNaN(parsedValue) ? 0 : parsedValue);
   };
 
+  const handleProjectInfoChange = (newData) => { 
+    setProjectInfo(newData);
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">프로젝트 생성</h1>
 
-      {/* Project Info */}
-      <div className="mb-4 p-4 border rounded-lg shadow-sm bg-white">
-        <div className="mb-2">
-          <label htmlFor="projectName" className="block text-sm font-medium text-gray-700">
-            프로젝트명
-          </label>
-          <CommonInput
-            type="text"
-            id="projectName"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            placeholder="프로젝트명을 입력하세요"
-          />
-        </div>
-        <div>
-          <label htmlFor="projectDuration" className="block text-sm font-medium text-gray-700 mb-1">
-            프로젝트 기간
-          </label>
-          <div className="flex space-x-2">
-            <DatePicker
-              selected={startDate}
-              onChange={(date) => setStartDate(date)}
-              selectsStart
-              startDate={startDate}
-              endDate={endDate}
-              dateFormat="yyyy-MM-dd"
-              placeholderText="시작일"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            />
-            <span>~</span>
-            <DatePicker
-              selected={endDate}
-              onChange={(date) => setEndDate(date)}
-              selectsEnd
-              startDate={startDate}
-              endDate={endDate}
-              minDate={startDate}
-              dateFormat="yyyy-MM-dd"
-              placeholderText="종료일"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            />
-          </div>
-        </div>
-        <div className="mb-2">
-          <label htmlFor="projectDescription" className="block text-sm font-medium text-gray-700">
-            설명
-          </label>
-          <CommonInput
-            type="text"
-            id="projectDescription"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            value={projectDescription}
-            onChange={(e) => setProjectDescription(e.target.value)}
-            placeholder="설명을 입력하세요"
-          />
-        </div>
-        <div className="mb-2">
-          <label htmlFor="projectClient" className="block text-sm font-medium text-gray-700">
-            고객명
-          </label>
-          <CommonInput
-            type="text"
-            id="projectClient"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            value={projectClient}
-            onChange={(e) => setProjectClient(e.target.value)}
-            placeholder="고객명을 입력하세요"
-          />
-        </div>
-      </div>
+      <ProjectForm onDataChange={handleProjectInfoChange} />
+
 
       <h2 className="text-xl font-bold mb-4">자재 선택</h2>
       <div className="overflow-x-auto bg-white rounded-lg shadow mb-8">
