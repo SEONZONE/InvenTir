@@ -276,6 +276,7 @@ export default function ProjectCreationPage() {
               <tr className="bg-gray-200">
                 <th className="th-base">공정</th>
                 <th className="th-base">품명</th>
+                <th className="th-base">수량</th>
                 <th className="th-base">재료비(단가)</th>
                 <th className="th-base">노무비(단가)</th>
                 <th className="th-base">경비(단가)</th>
@@ -288,6 +289,7 @@ export default function ProjectCreationPage() {
                 <tr key={item.temp_id}>
                   <td className="border-base">{item.process_name}</td>
                   <td className="border-base">{item.product_name}</td>
+                  <td className="border-base">{item.material_quantity}</td>
                   <td className="border-base text-center">{`${item.material_unit_price.toLocaleString('ko-KR')}원`}</td>
                   <td className="border-base text-center">{`${item.labor_unit_price.toLocaleString('ko-KR')}원`}</td>
                   <td className="border-base text-center">{`${item.expenses_unit_price.toLocaleString('ko-KR')}원`}</td>
